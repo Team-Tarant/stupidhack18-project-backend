@@ -4,16 +4,21 @@ import Route from '../models/Route'
 export default class RouteService {
   constructor() {}
 
-  async findALITRouteToDestination(location): Promise<Route> {
+  async findALITRouteToDestination(
+    startLocation: { lat: number; lng: number },
+    homeAddress: string
+  ): Promise<Route> {
     const params = {
-      location: location,
-      rankby: 'distance',
-      type: 'restaurant|liquor_store|bar|park|food'
+      location: startLocation,
+      type: 'restaurant|liquor_store|bar|park|food',
+      radius: 10000
     }
     let places = await axios.default.get(
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${
         process.env.GOOGLE_MAPS_API_KEY
-      }&location=${params.location}&rankby=${params.rankby}&type=${params.type}`
+      }&location=${params.location.lat},${params.location.lng}&radius=${
+        params.radius
+      }&type=${params.type}`
     )
     let placesArray = places.data.results
     let randomNumbers = []
@@ -22,7 +27,9 @@ export default class RouteService {
       i++
       randomNumbers.push(Math.floor(Math.random() * placesArray.length))
     }
-    let locationIDs = randomNumbers.map(idx => placesArray[idx].place_id)
+    let locationIDs = randomNumbers.map(
+      idx => 'place_id:' + placesArray[idx].place_id
+    )
     let waypoints = locationIDs.join('|')
     let res = await axios.default.get(
       `https://maps.googleapis.com/maps/api/directions/json?origin=Leppasuonkatu%2011,%20Helsinki&destination=Opastinsilta%202%20a&mode=walking&waypoints=${waypoints}&key=${
