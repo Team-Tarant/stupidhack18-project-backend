@@ -4,10 +4,25 @@ import Route from '../models/Route'
 export default class RouteService {
   constructor() {}
 
+  async getDirectionsHome(startLocation: { lat: number; lng: number }, endLocation: string, waypoints: string[] | null = null): Promise<Route> {
+    let waypointString = waypoints ? waypoints.join('|') : null;
+    let res = await axios.default.get(
+      `https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation.lat},${startLocation.lng}&destination=Opastinsilta%202%20a&mode=walking${waypoints ? '&waypoints=' + waypoints : ''}&key=${
+        process.env.GOOGLE_MAPS_API_KEY
+      }`
+    )
+    let route = new Route(res.data.routes[0]);
+    return route;
+  }
+
   async findALITRouteToDestination(
     startLocation: { lat: number; lng: number },
     homeAddress: string
   ): Promise<Route> {
+
+    let routeHome = await this.getDirectionsHome(startLocation, homeAddress);
+    let waypointSearchLocations: { lat: number; lng: number }[];
+    let homeRouteStepAmount = routeHome.steps.length;
     const params = {
       location: startLocation,
       type: 'restaurant|liquor_store|bar|park|food',
