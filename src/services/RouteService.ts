@@ -30,6 +30,12 @@ export default class RouteService {
       }`
     )
     let route = new Route(res.data.routes[0])
+
+    let geocodedWaypoints = res.data.geocoded_waypoints
+    route.steps.forEach((step, i) => {
+      let gcwp = geocodedWaypoints[i + 1]
+      step.locationTypes = gcwp.types
+    })
     return route
   }
 }

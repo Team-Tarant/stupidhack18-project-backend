@@ -1,14 +1,5 @@
-
-
 class Step {
-  type: {
-    'start',
-    'home',
-    'alko',
-    'fast_food',
-    'bar',
-    'grocery'
-  } = null;
+  locationTypes: string[];
   start_location: {
     lat: number,
     lng: number
