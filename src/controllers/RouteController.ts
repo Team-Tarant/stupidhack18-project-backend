@@ -10,9 +10,12 @@ export default class RouteController {
   }
 
   async getRoute(req: express.Request, res: express.Response) {
+    let locationString = req.query.startLocation.split('%2C')
+    let startLocation = { lat: locationString[0], lng: locationString[1] }
+
     let route = await this.routeService.findALITRouteToDestination(
-      { lat: 60.1692884, lng: 24.9211845 },
-      ''
+      startLocation,
+      req.query.homeAddress
     )
     res.status(200).json(route)
   }
