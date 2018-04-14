@@ -46,7 +46,7 @@ export default class RouteService {
   private async getWaypoints(waypointSearchLocation: { lat: number; lng: number }) {
     const params = {
       location: waypointSearchLocation,
-      type: 'restaurant|liquor_store|bar|park|food',
+      type: 'restaurant|liquor_store|bar|park|food|church|place_of_worship',
       radius: 10000
     }
 
