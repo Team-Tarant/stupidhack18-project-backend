@@ -1,16 +1,44 @@
 import * as axios from 'axios'
+import * as fs from 'fs';
 import Route from '../models/Route'
+
+// assumes query is obj with string keys and values
+const querify = (key, value) => `${key}=${encodeURIComponent(value)}`;
+
+const formatQuery = query => {
+  const queryArray = Object.keys(query).reduce((acc, key) => {
+    const value = query[key];
+    if (value === undefined || value === null) {
+      // skip undefineds
+      return acc;
+    }
+    return [...acc, querify(key, value)];
+  }, []);
+  return queryArray.join('&');
+};
 
 export default class RouteService {
   constructor() { }
 
   private async getDirectionsHome(startLocation: { lat: number; lng: number }, endLocation: string, waypoints: string[] | null = null): Promise<Route> {
     let waypointString = waypoints ? waypoints.join('|') : null;
-    let res = await axios.default.get(
-      `https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation.lat},${startLocation.lng}&destination=${endLocation}&mode=walking${waypoints ? '&waypoints=' + waypoints : ''}&key=${
-      process.env.GOOGLE_MAPS_API_KEY
-      }`
-    )
+    let res;
+
+    const query = formatQuery({
+      origin: `${startLocation.lat},${startLocation.lng}`,
+      destination: endLocation,
+      mode: 'walking',
+      waypoints,
+      key: process.env.GOOGLE_MAPS_API_KEY
+    })
+    try {
+      res = await axios.default.get(
+        `https://maps.googleapis.com/maps/api/directions/json?${query}`
+      )
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
     let route = new Route(res.data.routes[0]);
     return route;
   }
@@ -21,12 +49,15 @@ export default class RouteService {
       type: 'restaurant|liquor_store|bar|park|food',
       radius: 10000
     }
+
+    const query = formatQuery({
+      key: process.env.GOOGLE_MAPS_API_KEY,
+      location: `${params.location.lat},${params.location.lng}`,
+      radius: params.radius,
+      type: params.type
+    });
     let places = await axios.default.get(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${
-      process.env.GOOGLE_MAPS_API_KEY
-      }&location=${params.location.lat},${params.location.lng}&radius=${
-      params.radius
-      }&type=${params.type}`
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${query}`
     )
     let placesArray = places.data.results
    /* let randomNumbers = [];
@@ -64,11 +95,22 @@ export default class RouteService {
 
 
     let waypoints = locationIDs.map(a => a.join('|')).join('|');
-    let res = await axios.default.get(
-      `https://maps.googleapis.com/maps/api/directions/json?origin=Leppasuonkatu%2011,%20Helsinki&destination=${homeAddress }&mode=walking&waypoints=${waypoints}&key=${
-      process.env.GOOGLE_MAPS_API_KEY
-      }`
-    )
+    let res;
+    try {
+      const query = formatQuery({
+        origin: 'Leppäsuonkatu 11, Helsinki',
+        destination: homeAddress,
+        mode: 'walking',
+        waypoints: waypoints,
+        key: process.env.GOOGLE_MAPS_API_KEY
+      })
+      res = await axios.default.get(
+        `https://maps.googleapis.com/maps/api/directions/json?${query}`
+      )
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
     let route = new Route(res.data.routes[0])
 
     let geocodedWaypoints = res.data.geocoded_waypoints
