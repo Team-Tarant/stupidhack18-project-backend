@@ -1,5 +1,6 @@
 import * as express from 'express'
 import RouteService from '../services/RouteService'
+import ServiceResponse from '../utils/ServiceHTTPResponse';
 
 export default class RouteController {
   route: express.Router
@@ -16,11 +17,16 @@ export default class RouteController {
       lng: Number(locationString[1])
     }
 
-    let route = await this.routeService.findALITRouteToDestination(
-      startLocation,
-      req.query.homeAddress
-    )
-    res.status(200).json(route)
+    try {
+      let route = await this.routeService.findALITRouteToDestination(
+        startLocation,
+        req.query.homeAddress
+      );
+      res.status(200).json(new ServiceResponse(route, 'Success'));
+
+    } catch (e) {
+      res.status(e.httpErrorCode).json(new ServiceResponse(null, e.message, false));
+    }
   }
 
   initRoute() {

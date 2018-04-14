@@ -1,6 +1,7 @@
 import * as axios from 'axios'
 import * as fs from 'fs';
 import Route from '../models/Route'
+import ServiceError from '../utils/ServiceError';
 
 // assumes query is obj with string keys and values
 const querify = (key, value) => `${key}=${encodeURIComponent(value)}`;
@@ -37,7 +38,7 @@ export default class RouteService {
       )
     } catch (e) {
       console.error(e);
-      throw e;
+      throw new ServiceError(500, e.message);
     }
     let route = new Route(res.data.routes[0]);
     return route;
@@ -60,15 +61,15 @@ export default class RouteService {
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${query}`
     )
     let placesArray = places.data.results
-   /* let randomNumbers = [];
-    let i = 0
-    while (i <= Math.floor(Math.random()) + 1) {
-      i++
-      randomNumbers.push(Math.floor(Math.random() * placesArray.length))
-    }
-    let locationIDs = randomNumbers.map(
-      idx => 'place_id:' + placesArray[idx].place_id
-    )*/
+    /* let randomNumbers = [];
+     let i = 0
+     while (i <= Math.floor(Math.random()) + 1) {
+       i++
+       randomNumbers.push(Math.floor(Math.random() * placesArray.length))
+     }
+     let locationIDs = randomNumbers.map(
+       idx => 'place_id:' + placesArray[idx].place_id
+     )*/
     let locationIDs = ['place_id:' + placesArray[0].place_id, 'place_id:' + placesArray[1].place_id];
     return locationIDs;
   }
@@ -89,10 +90,17 @@ export default class RouteService {
     }
 
     let locationIDs = [];
+    let promiseArray: Promise<any>[] = [];
     for (let loc of waypointSearchLocations) {
-      locationIDs.push(await this.getWaypoints(loc));
+      promiseArray.push(this.getWaypoints(loc));
     }
 
+    try {
+      locationIDs = await Promise.all(promiseArray);
+    } catch (e) {
+      console.error(e);
+      throw new ServiceError(500, e.message);
+    }
 
     let waypoints = locationIDs.map(a => a.join('|')).join('|');
     let res;
@@ -109,7 +117,7 @@ export default class RouteService {
       )
     } catch (e) {
       console.error(e);
-      throw e;
+      throw new ServiceError(500, e.message);
     }
     let route = new Route(res.data.routes[0])
 
