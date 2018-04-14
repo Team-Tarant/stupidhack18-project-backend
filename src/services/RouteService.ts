@@ -70,7 +70,7 @@ export default class RouteService {
      let locationIDs = randomNumbers.map(
        idx => 'place_id:' + placesArray[idx].place_id
      )*/
-    let locationIDs = ['place_id:' + placesArray[0].place_id, 'place_id:' + placesArray[1].place_id];
+    let locationIDs = [{ placeId: 'place_id:' + placesArray[0].place_id, name: placesArray[0].name || 'unknown' }, { placeId: 'place_id:' + placesArray[1].place_id, name: placesArray[1].name || 'unknown' }];
     return locationIDs;
   }
 
@@ -89,27 +89,27 @@ export default class RouteService {
       waypointSearchLocations.push(routeHome.steps[0].directions[Math.floor(Math.random() * homeRouteStepAmount)].end_location)
     }
 
-    let locationIDs = [];
+    let waypoints = [];
     let promiseArray: Promise<any>[] = [];
     for (let loc of waypointSearchLocations) {
       promiseArray.push(this.getWaypoints(loc));
     }
 
     try {
-      locationIDs = await Promise.all(promiseArray);
+      waypoints = await Promise.all(promiseArray);
     } catch (e) {
       console.error(e);
       throw new ServiceError(500, e.message);
     }
 
-    let waypoints = locationIDs.map(a => a.join('|')).join('|');
+    let waypointString = waypoints.map(a => a.map(p => p.placeId).join('|')).join('|');
     let res;
     try {
       const query = formatQuery({
-        origin: 'Leppäsuonkatu 11, Helsinki',
+        origin: `${startLocation.lat},${startLocation.lng}`,
         destination: homeAddress,
         mode: 'walking',
-        waypoints: waypoints,
+        waypoints: waypointString,
         key: process.env.GOOGLE_MAPS_API_KEY
       })
       res = await axios.default.get(
@@ -125,7 +125,7 @@ export default class RouteService {
     route.steps.forEach((step, i) => {
       let gcwp = geocodedWaypoints[i + 1]
       step.locationTypes = gcwp.types
-    })
+    });
     return route
   }
 }

@@ -9,6 +9,7 @@ class Step {
     lng: number
   } = null;
   directions: Direction[] = null;
+  destinationPlaceName: string = null;
 
   constructor(obj) {
     Object.keys(this).forEach(key => {
