@@ -25,7 +25,7 @@ export default class RouteController {
       res.status(200).json(new ServiceResponse(route, 'Success'));
 
     } catch (e) {
-      res.status(e.httpErrorCode).json(new ServiceResponse(null, e.message, false));
+      res.status(e.httpErrorCode || 500).json(new ServiceResponse(null, e.message, false));
     }
   }
 
