@@ -54,23 +54,26 @@ export default class RouteService {
     const query = formatQuery({
       key: process.env.GOOGLE_MAPS_API_KEY,
       location: `${params.location.lat},${params.location.lng}`,
-      radius: params.radius,
+      rankby: 'distance',
       type: params.type
     });
     let places = await axios.default.get(
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${query}`
     )
     let placesArray = places.data.results
-    /* let randomNumbers = [];
-     let i = 0
-     while (i <= Math.floor(Math.random()) + 1) {
-       i++
-       randomNumbers.push(Math.floor(Math.random() * placesArray.length))
-     }
-     let locationIDs = randomNumbers.map(
-       idx => 'place_id:' + placesArray[idx].place_id
-     )*/
-    let locationIDs = [{ placeId: 'place_id:' + placesArray[0].place_id, name: placesArray[0].name || 'unknown' }, { placeId: 'place_id:' + placesArray[1].place_id, name: placesArray[1].name || 'unknown' }];
+    let randomNumbers = [];
+    let i = 0
+    while (i <= Math.floor(Math.random()) + 1) {
+      i++
+      randomNumbers.push(Math.floor(Math.random() * placesArray.length))
+    }
+    let locationIDs = randomNumbers.map(
+      idx => ({
+        placeId: 'place_id:' + placesArray[idx].place_id,
+        name: placesArray[idx].name
+      })
+    )
+    //let locationIDs = [{ placeId: 'place_id:' + placesArray[0].place_id, name: placesArray[0].name || 'unknown' }, { placeId: 'place_id:' + placesArray[1].place_id, name: placesArray[1].name || 'unknown' }];
     return locationIDs;
   }
 
@@ -122,9 +125,14 @@ export default class RouteService {
     let route = new Route(res.data.routes[0]);
 
     let geocodedWaypoints = res.data.geocoded_waypoints;
+    let placeNames: string[] = [];
+    waypoints.forEach(a => a.forEach(e => placeNames.push(e.name)));
     route.steps.forEach((step, i) => {
       let gcwp = geocodedWaypoints[i + 1]
       step.locationTypes = gcwp.types
+      if (i > 0) {
+        step.destinationPlaceName = placeNames[i - 1];
+      }
     });
     return route
   }
