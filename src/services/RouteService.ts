@@ -130,9 +130,8 @@ export default class RouteService {
     route.steps.forEach((step, i) => {
       let gcwp = geocodedWaypoints[i + 1]
       step.locationTypes = gcwp.types
-      if (i > 0) {
-        step.destinationPlaceName = placeNames[i - 1];
-      }
+      step.destinationPlaceName = placeNames[i];
+
     });
     return route
   }
