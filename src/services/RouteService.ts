@@ -119,9 +119,9 @@ export default class RouteService {
       console.error(e);
       throw new ServiceError(500, e.message);
     }
-    let route = new Route(res.data.routes[0])
+    let route = new Route(res.data.routes[0]);
 
-    let geocodedWaypoints = res.data.geocoded_waypoints
+    let geocodedWaypoints = res.data.geocoded_waypoints;
     route.steps.forEach((step, i) => {
       let gcwp = geocodedWaypoints[i + 1]
       step.locationTypes = gcwp.types

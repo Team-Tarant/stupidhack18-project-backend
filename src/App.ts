@@ -9,4 +9,4 @@ let routeController = new RouteController();
 
 app.use('/api/routes', routeController.initRoute());
 
-app.listen(3000);
+app.listen(3001);
